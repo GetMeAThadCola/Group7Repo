@@ -1,33 +1,23 @@
+// LoginRegisterModal.jsx
 import { useState, useEffect } from "react";
 import { Auth } from "aws-amplify";
 import "./loginModal.css";
 
 const LoginRegisterModal = ({ show, onClose }) => {
-  const [mode, setMode] = useState("login"); // "login" | "register" | "confirm"
+  const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [code, setCode] = useState(""); // confirmation code
-  const [error, setError] = useState("");
+  const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setEmail("");
     setPassword("");
     setCode("");
-    setError("");
     setMessage("");
+    setError("");
   }, [mode, show]);
-
-  const handleLogin = async () => {
-    try {
-      const user = await Auth.signIn(email, password);
-      localStorage.setItem("isLoggedIn", "true");
-      onClose();
-      window.location.reload();
-    } catch (err) {
-      setError(err.message || "Login failed");
-    }
-  };
 
   const handleRegister = async () => {
     try {
@@ -36,20 +26,31 @@ const LoginRegisterModal = ({ show, onClose }) => {
         password,
         attributes: { email },
       });
+      setMessage("Confirmation code sent to your email.");
       setMode("confirm");
-      setMessage("A confirmation code has been sent to your email.");
     } catch (err) {
-      setError(err.message || "Registration failed");
+      setError(err.message);
     }
   };
 
-  const handleConfirmCode = async () => {
+  const handleConfirm = async () => {
     try {
       await Auth.confirmSignUp(email, code);
+      setMessage("Email confirmed! Please log in.");
       setMode("login");
-      setMessage("Account confirmed! Please log in.");
     } catch (err) {
-      setError(err.message || "Confirmation failed");
+      setError(err.message);
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      await Auth.signIn(email, password);
+      localStorage.setItem("isLoggedIn", "true");
+      onClose();
+      window.location.reload();
+    } catch (err) {
+      setError("Login failed: " + err.message);
     }
   };
 
@@ -59,51 +60,41 @@ const LoginRegisterModal = ({ show, onClose }) => {
     <div className="modal-overlay">
       <div className="modal-box">
         <button className="close-btn" onClick={onClose}>×</button>
-        <h2>
-          {mode === "login"
-            ? "Login"
-            : mode === "register"
-            ? "Register"
-            : "Confirm Email"}
-        </h2>
+        <h2>{mode === "login" ? "Login" : mode === "register" ? "Register" : "Confirm Email"}</h2>
 
-        {message && <p className="success-msg">{message}</p>}
-        {error && <p className="error-msg">{error}</p>}
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
         {(mode === "login" || mode === "register") && (
-          <>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         )}
 
         {mode === "confirm" && (
-          <>
-            <input
-              type="text"
-              placeholder="Enter confirmation code"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-            />
-          </>
+          <input
+            type="text"
+            placeholder="Confirmation Code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
         )}
+
+        {error && <p className="error-msg">{error}</p>}
+        {message && <p className="success-msg">{message}</p>}
 
         {mode === "login" && (
           <>
             <button onClick={handleLogin}>Login</button>
             <p>
-              Don't have an account?{" "}
-              <span onClick={() => setMode("register")}>Register</span>
+              Don't have an account? <span onClick={() => setMode("register")}>Register</span>
             </p>
           </>
         )}
@@ -112,18 +103,16 @@ const LoginRegisterModal = ({ show, onClose }) => {
           <>
             <button onClick={handleRegister}>Register</button>
             <p>
-              Already have an account?{" "}
-              <span onClick={() => setMode("login")}>Login</span>
+              Already have an account? <span onClick={() => setMode("login")}>Login</span>
             </p>
           </>
         )}
 
         {mode === "confirm" && (
           <>
-            <button onClick={handleConfirmCode}>Confirm</button>
+            <button onClick={handleConfirm}>Confirm Code</button>
             <p>
-              Already confirmed?{" "}
-              <span onClick={() => setMode("login")}>Login</span>
+              Need to login? <span onClick={() => setMode("login")}>Login</span>
             </p>
           </>
         )}
@@ -133,3 +122,4 @@ const LoginRegisterModal = ({ show, onClose }) => {
 };
 
 export default LoginRegisterModal;
+
