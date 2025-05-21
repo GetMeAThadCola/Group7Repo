@@ -4,25 +4,44 @@ import "./navbar.css";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import LoginRegisterModal from "../LoginRegisterModal/loginregistermodal";
+import { Auth } from "aws-amplify";
 
 const NavBar = () => {
   const { cartList } = useSelector((state) => state.cart);
   const [expand, setExpand] = useState(false);
   const [isFixed, setIsFixed] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-
-  function scrollHandler() {
-    if (window.scrollY >= 100) {
-      setIsFixed(true);
-    } else if (window.scrollY <= 50) {
-      setIsFixed(false);
-    }
-  }
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    window.addEventListener("scroll", scrollHandler);
-    return () => window.removeEventListener("scroll", scrollHandler);
+    const handleScroll = () => {
+      setIsFixed(window.scrollY >= 100);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await Auth.currentAuthenticatedUser();
+        setUser(currentUser);
+      } catch (err) {
+        setUser(null);
+      }
+    };
+    fetchUser();
+  }, [showLoginModal]);
+
+  const handleLogout = async () => {
+    try {
+      await Auth.signOut();
+      setUser(null);
+      window.location.reload();
+    } catch (err) {
+      console.error("Error signing out: ", err);
+    }
+  };
 
   return (
     <>
@@ -32,7 +51,7 @@ const NavBar = () => {
         className={isFixed ? "navbar fixed" : "navbar"}
       >
         <Container className="navbar-container">
-          <Navbar.Brand to="/">
+          <Navbar.Brand as={Link} to="/">
             <ion-icon name="bag"></ion-icon>
             <h1 className="logo">BiteRunners</h1>
           </Navbar.Brand>
@@ -50,9 +69,8 @@ const NavBar = () => {
             <Nav className="justify-content-end flex-grow-1 pe-3">
               <Nav.Item>
                 <Link
-                  aria-label="Go to Home Page"
-                  className="navbar-link"
                   to="/"
+                  className="navbar-link"
                   onClick={() => setExpand(false)}
                 >
                   <span className="nav-link-label">Home</span>
@@ -60,9 +78,8 @@ const NavBar = () => {
               </Nav.Item>
               <Nav.Item>
                 <Link
-                  aria-label="Go to Shop Page"
-                  className="navbar-link"
                   to="/shop"
+                  className="navbar-link"
                   onClick={() => setExpand(false)}
                 >
                   <span className="nav-link-label">Shop</span>
@@ -70,52 +87,79 @@ const NavBar = () => {
               </Nav.Item>
               <Nav.Item>
                 <Link
-                  aria-label="Go to Cart Page"
-                  className="navbar-link"
                   to="/cart"
+                  className="navbar-link"
                   onClick={() => setExpand(false)}
                 >
                   <span className="nav-link-label">Cart</span>
                 </Link>
               </Nav.Item>
               <Nav.Item>
-                <div
-                  onClick={() => setShowLoginModal(true)}
-                  style={{ cursor: "pointer" }}
-                  className="navbar-link"
-                >
-                  <span className="nav-link-label">Login</span>
-                </div>
+                {user ? (
+                  <Link
+                    to="/account"
+                    className="navbar-link"
+                    onClick={() => setExpand(false)}
+                  >
+                    <span className="nav-link-label">
+                      {user.attributes?.email || "Account"}
+                    </span>
+                  </Link>
+                ) : (
+                  <div
+                    onClick={() => setShowLoginModal(true)}
+                    className="navbar-link"
+                    style={{ cursor: "pointer" }}
+                  >
+                    <span className="nav-link-label">Login</span>
+                  </div>
+                )}
               </Nav.Item>
             </Nav>
           </Navbar.Collapse>
 
           <div className="media-cart">
-            {/* 👤 LOGIN ICON */}
-            <div
-              onClick={() => setShowLoginModal(true)}
-              style={{ cursor: "pointer", marginRight: "1rem" }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="black"
-                className="nav-icon"
+            {user ? (
+              <Link to="/account">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="black"
+                  className="nav-icon"
+                  style={{ marginRight: "1rem" }}
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </Link>
+            ) : (
+              <div
+                onClick={() => setShowLoginModal(true)}
+                style={{ cursor: "pointer", marginRight: "1rem" }}
               >
-                <path
-                  fillRule="evenodd"
-                  d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="black"
+                  className="nav-icon"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            )}
 
-            {/* 🛒 CART ICON */}
             <Link
-              aria-label="Go to Cart Page"
               to="/cart"
               className="cart"
               data-num={cartList.length}
+              aria-label="Go to Cart Page"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

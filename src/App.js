@@ -8,6 +8,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Amplify } from 'aws-amplify';
 import awsconfig from './aws-exports';
+import Account from "./pages/Account"; // or correct path
 
 Amplify.configure(awsconfig);
 
@@ -37,6 +38,7 @@ function App() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/shop/:id" element={<Product />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/account" element={<Account />} />
         </Routes>
         <Footer />
       </Router>

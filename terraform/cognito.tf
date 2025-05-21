@@ -5,11 +5,11 @@ resource "aws_cognito_user_pool" "biterunners_users" {
   auto_verified_attributes = ["email"]
 
   email_configuration {
-    email_sending_account = "COGNITO_DEFAULT"  # Uses Amazon SES managed by AWS
+    email_sending_account = "COGNITO_DEFAULT"
   }
 
   verification_message_template {
-    default_email_option = "CONFIRM_WITH_CODE" # Sends a 6-digit code to verify
+    default_email_option = "CONFIRM_WITH_CODE"
   }
 
   password_policy {
@@ -32,6 +32,13 @@ resource "aws_cognito_user_pool_client" "frontend_client" {
   name         = "biterunners-frontend-client"
   user_pool_id = aws_cognito_user_pool.biterunners_users.id
   generate_secret = false
+
+  explicit_auth_flows = [
+    "ALLOW_USER_PASSWORD_AUTH",
+    "ALLOW_REFRESH_TOKEN_AUTH",
+    "ALLOW_USER_SRP_AUTH",
+    "ALLOW_CUSTOM_AUTH"
+  ]
 
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code", "implicit"]

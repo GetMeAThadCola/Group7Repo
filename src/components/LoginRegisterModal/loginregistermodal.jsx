@@ -4,7 +4,7 @@ import { Auth } from "aws-amplify";
 import "./loginModal.css";
 
 const LoginRegisterModal = ({ show, onClose }) => {
-  const [mode, setMode] = useState("login");
+  const [mode, setMode] = useState("login"); // "login", "register", or "confirm"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -25,32 +25,34 @@ const LoginRegisterModal = ({ show, onClose }) => {
         username: email,
         password,
         attributes: { email },
+        autoSignIn: { enabled: true }, // Optional
       });
       setMessage("Confirmation code sent to your email.");
       setMode("confirm");
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Error during registration.");
     }
   };
 
   const handleConfirm = async () => {
     try {
       await Auth.confirmSignUp(email, code);
-      setMessage("Email confirmed! Please log in.");
+      setMessage("Email confirmed! You can now log in.");
       setMode("login");
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Error during confirmation.");
     }
   };
 
   const handleLogin = async () => {
     try {
-      await Auth.signIn(email, password);
+      const user = await Auth.signIn(email, password);
       localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userEmail", user.attributes.email);
       onClose();
       window.location.reload();
     } catch (err) {
-      setError("Login failed: " + err.message);
+      setError("Login failed: " + (err.message || "Unknown error"));
     }
   };
 
@@ -60,7 +62,13 @@ const LoginRegisterModal = ({ show, onClose }) => {
     <div className="modal-overlay">
       <div className="modal-box">
         <button className="close-btn" onClick={onClose}>×</button>
-        <h2>{mode === "login" ? "Login" : mode === "register" ? "Register" : "Confirm Email"}</h2>
+        <h2>
+          {mode === "login"
+            ? "Login"
+            : mode === "register"
+            ? "Register"
+            : "Confirm Email"}
+        </h2>
 
         <input
           type="email"
@@ -94,7 +102,8 @@ const LoginRegisterModal = ({ show, onClose }) => {
           <>
             <button onClick={handleLogin}>Login</button>
             <p>
-              Don't have an account? <span onClick={() => setMode("register")}>Register</span>
+              Don't have an account?{" "}
+              <span onClick={() => setMode("register")}>Register</span>
             </p>
           </>
         )}
@@ -103,7 +112,8 @@ const LoginRegisterModal = ({ show, onClose }) => {
           <>
             <button onClick={handleRegister}>Register</button>
             <p>
-              Already have an account? <span onClick={() => setMode("login")}>Login</span>
+              Already have an account?{" "}
+              <span onClick={() => setMode("login")}>Login</span>
             </p>
           </>
         )}
@@ -112,7 +122,8 @@ const LoginRegisterModal = ({ show, onClose }) => {
           <>
             <button onClick={handleConfirm}>Confirm Code</button>
             <p>
-              Need to login? <span onClick={() => setMode("login")}>Login</span>
+              Need to log in?{" "}
+              <span onClick={() => setMode("login")}>Login</span>
             </p>
           </>
         )}
@@ -122,4 +133,3 @@ const LoginRegisterModal = ({ show, onClose }) => {
 };
 
 export default LoginRegisterModal;
-
