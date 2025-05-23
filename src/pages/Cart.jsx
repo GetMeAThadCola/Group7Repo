@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Col, Container, Row } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -6,16 +6,53 @@ import {
   decreaseQty,
   deleteProduct,
 } from "../app/features/cart/cartSlice";
+import { useAuth } from "../hooks/useAuth";
 
 const Cart = () => {
   const { cartList } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
+  const { token } = useAuth();
 
-  // Calculate total price
+  const [status, setStatus] = useState("");
+
   const totalPrice = cartList.reduce(
     (price, item) => price + item.qty * item.price,
     0
   );
+
+  const handleCheckout = async () => {
+    if (!token) {
+      setStatus("Please log in to complete checkout.");
+      return;
+    }
+
+    setStatus("Processing...");
+    try {
+      const res = await fetch(
+        "https://k3qissszlf.execute-api.us-west-2.amazonaws.com/checkout",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            items: cartList,
+            total: totalPrice,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        setStatus("✅ Order placed successfully!");
+        cartList.forEach((item) => dispatch(deleteProduct(item))); // Clear cart
+      } else {
+        setStatus(data.error || "Checkout failed.");
+      }
+    } catch (err) {
+      setStatus("Checkout failed: " + err.message);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -82,6 +119,14 @@ const Cart = () => {
                 <h4>Total Price :</h4>
                 <h3>${totalPrice.toFixed(2)}</h3>
               </div>
+              {cartList.length > 0 && (
+                <>
+                  <button onClick={handleCheckout} className="checkout-button">
+                    Checkout
+                  </button>
+                  {status && <p>{status}</p>}
+                </>
+              )}
             </div>
           </Col>
         </Row>

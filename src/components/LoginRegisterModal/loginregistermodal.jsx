@@ -1,58 +1,60 @@
-// LoginRegisterModal.jsx
 import { useState, useEffect } from "react";
-import { Auth } from "aws-amplify";
+import { useAuth } from "../../context/AuthContext";
 import "./loginModal.css";
+import { toast } from "react-toastify";
 
 const LoginRegisterModal = ({ show, onClose }) => {
-  const [mode, setMode] = useState("login"); // "login", "register", or "confirm"
+  const [mode, setMode] = useState("login"); // login | register | confirm
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const { login, register, confirmSignUp } = useAuth();
 
   useEffect(() => {
     setEmail("");
     setPassword("");
     setCode("");
-    setMessage("");
     setError("");
+    setMessage("");
   }, [mode, show]);
 
-  const handleRegister = async () => {
-    try {
-      await Auth.signUp({
-        username: email,
-        password,
-        attributes: { email },
-        autoSignIn: { enabled: true }, // Optional
-      });
-      setMessage("Confirmation code sent to your email.");
-      setMode("confirm");
-    } catch (err) {
-      setError(err.message || "Error during registration.");
-    }
-  };
+  const handleSubmit = async () => {
+    setError("");
+    setMessage("");
 
-  const handleConfirm = async () => {
-    try {
-      await Auth.confirmSignUp(email, code);
-      setMessage("Email confirmed! You can now log in.");
-      setMode("login");
-    } catch (err) {
-      setError(err.message || "Error during confirmation.");
-    }
-  };
-
-  const handleLogin = async () => {
-    try {
-      const user = await Auth.signIn(email, password);
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userEmail", user.attributes.email);
-      onClose();
-      window.location.reload();
-    } catch (err) {
-      setError("Login failed: " + (err.message || "Unknown error"));
+    if (mode === "register") {
+      const result = await register(email, password);
+      if (result.success) {
+        setMode("confirm");
+        setMessage("✅ Code sent to your email. Please confirm.");
+        toast.success("Confirmation code sent to your email.");
+      } else {
+        setError(result.error || "Registration failed.");
+        toast.error(result.error);
+      }
+    } else if (mode === "login") {
+      const result = await login(email, password);
+      if (result.success) {
+        toast.success("🎉 Login successful!");
+        setMessage("Login successful.");
+        onClose(); // Close the modal smoothly
+      } else {
+        setError(result.error || "Login failed.");
+        toast.error(result.error);
+      }
+    } else if (mode === "confirm") {
+      const result = await confirmSignUp(email, code);
+      if (result.success) {
+        setMessage("Email confirmed. You can now log in.");
+        toast.success("✅ Email confirmed!");
+        setMode("login");
+      } else {
+        setError(result.error || "Confirmation failed.");
+        toast.error(result.error);
+      }
     }
   };
 
@@ -75,6 +77,7 @@ const LoginRegisterModal = ({ show, onClose }) => {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
 
         {(mode === "login" || mode === "register") && (
@@ -83,49 +86,40 @@ const LoginRegisterModal = ({ show, onClose }) => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
         )}
 
         {mode === "confirm" && (
           <input
             type="text"
-            placeholder="Confirmation Code"
+            placeholder="Enter Confirmation Code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
+            required
           />
         )}
 
         {error && <p className="error-msg">{error}</p>}
         {message && <p className="success-msg">{message}</p>}
 
-        {mode === "login" && (
-          <>
-            <button onClick={handleLogin}>Login</button>
-            <p>
-              Don't have an account?{" "}
-              <span onClick={() => setMode("register")}>Register</span>
-            </p>
-          </>
-        )}
+        <button onClick={handleSubmit}>
+          {mode === "login"
+            ? "Login"
+            : mode === "register"
+            ? "Register"
+            : "Confirm Code"}
+        </button>
 
-        {mode === "register" && (
-          <>
-            <button onClick={handleRegister}>Register</button>
-            <p>
-              Already have an account?{" "}
-              <span onClick={() => setMode("login")}>Login</span>
-            </p>
-          </>
-        )}
-
-        {mode === "confirm" && (
-          <>
-            <button onClick={handleConfirm}>Confirm Code</button>
-            <p>
-              Need to log in?{" "}
-              <span onClick={() => setMode("login")}>Login</span>
-            </p>
-          </>
+        {mode !== "confirm" && (
+          <p>
+            {mode === "login"
+              ? "Don't have an account?"
+              : "Already have an account?"}{" "}
+            <span onClick={() => setMode(mode === "login" ? "register" : "login")}>
+              {mode === "login" ? "Register" : "Login"}
+            </span>
+          </p>
         )}
       </div>
     </div>

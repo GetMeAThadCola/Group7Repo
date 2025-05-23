@@ -6,17 +6,19 @@ import Footer from "./components/Footer/Footer";
 import Loader from "./components/Loader/Loader";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Amplify } from 'aws-amplify';
-import awsconfig from './aws-exports';
-import Account from "./pages/Account"; // or correct path
+import { Amplify } from "aws-amplify";
+import awsconfig from "./aws-exports";
+import Account from "./pages/Account";
 
+// Configure Amplify
 Amplify.configure(awsconfig);
 
-
+// Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
 const Shop = lazy(() => import("./pages/Shop"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Product = lazy(() => import("./pages/Product"));
+
 function App() {
   return (
     <Suspense fallback={<Loader />}>
