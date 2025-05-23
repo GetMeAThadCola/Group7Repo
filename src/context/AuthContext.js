@@ -8,7 +8,24 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token") || null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(!!token);
+
+  useEffect(() => {
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        setUser(payload);
+      } catch (err) {
+        console.error("Invalid token format", err);
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
+    setLoading(false);
+  }, [token]);
 
   const login = async (email, password) => {
     try {
@@ -48,12 +65,15 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     await Auth.signOut();
     setToken(null);
+    setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem("token");
   };
 
   const value = {
     token,
+    user,
+    loading,
     isAuthenticated,
     login,
     register,

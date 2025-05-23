@@ -5,58 +5,93 @@ import {
   addToCart,
   decreaseQty,
   deleteProduct,
+  clearCart,
 } from "../app/features/cart/cartSlice";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 const Cart = () => {
   const { cartList } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
-  const { token } = useAuth();
+  const { user, token, loading } = useAuth();
 
-  const [status, setStatus] = useState("");
+  const [savedPaymentMethod, setSavedPaymentMethod] = useState("mock-card-0000");
+  const [hasLoadedPayment, setHasLoadedPayment] = useState(false);
 
   const totalPrice = cartList.reduce(
     (price, item) => price + item.qty * item.price,
     0
   );
 
-  const handleCheckout = async () => {
-    if (!token) {
-      setStatus("Please log in to complete checkout.");
-      return;
-    }
+  useEffect(() => {
+    console.log("Cart useEffect loaded. User:", user);
 
-    setStatus("Processing...");
+    if (!loading && user?.email && !hasLoadedPayment) {
+      console.log("Fetching payment method for:", user.email);
+
+      fetch(`https://k3qissszlf.execute-api.us-west-2.amazonaws.com/get-profile?email=${user.email}`)
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Fetched profile:", data);
+
+          if (data && data.paymentMethod) {
+            setSavedPaymentMethod(data.paymentMethod);
+            console.log("Payment method set to:", data.paymentMethod);
+          } else {
+            toast.info("No saved payment method found. Using fallback.");
+          }
+
+          setHasLoadedPayment(true);
+        })
+        .catch((err) => {
+          console.error("Failed to load payment method:", err);
+          toast.error("Could not load saved payment method.");
+          setHasLoadedPayment(true);
+        });
+    }
+  }, [loading, user?.email, hasLoadedPayment]);
+
+  const handleCheckout = async () => {
+    const payload = {
+      email: user?.email || "guest@example.com",
+      items: cartList,
+      total: totalPrice,
+      paymentMethod: savedPaymentMethod,
+    };
+
+    console.log("Checkout payload:", payload);
+
     try {
-      const res = await fetch(
+      const response = await fetch(
         "https://k3qissszlf.execute-api.us-west-2.amazonaws.com/checkout",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            items: cartList,
-            total: totalPrice,
-          }),
+          body: JSON.stringify(payload),
         }
       );
-      const data = await res.json();
-      if (res.ok) {
-        setStatus("✅ Order placed successfully!");
-        cartList.forEach((item) => dispatch(deleteProduct(item))); // Clear cart
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(`Transaction successful! Charged to ${savedPaymentMethod}`);
+        dispatch(clearCart());
       } else {
-        setStatus(data.error || "Checkout failed.");
+        toast.error(`Checkout failed: ${data.error || "Unknown error"}`);
       }
-    } catch (err) {
-      setStatus("Checkout failed: " + err.message);
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast.error("Failed to process checkout. Please try again.");
     }
   };
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  if (loading) return <p style={{ padding: "2rem" }}>Loading cart...</p>;
 
   return (
     <section className="cart-items">
@@ -119,13 +154,15 @@ const Cart = () => {
                 <h4>Total Price :</h4>
                 <h3>${totalPrice.toFixed(2)}</h3>
               </div>
+              {savedPaymentMethod && (
+                <p style={{ fontStyle: "italic", marginTop: "1rem" }}>
+                  Payment method: {savedPaymentMethod}
+                </p>
+              )}
               {cartList.length > 0 && (
-                <>
-                  <button onClick={handleCheckout} className="checkout-button">
-                    Checkout
-                  </button>
-                  {status && <p>{status}</p>}
-                </>
+                <button onClick={handleCheckout} className="checkout-button">
+                  Checkout
+                </button>
               )}
             </div>
           </Col>

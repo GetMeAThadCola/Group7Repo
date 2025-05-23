@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 const Account = () => {
   const navigate = useNavigate();
@@ -10,7 +11,8 @@ const Account = () => {
   const [cardName, setCardName] = useState("");
   const [cardLast4, setCardLast4] = useState("");
   const [expiry, setExpiry] = useState("");
-  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [savedPaymentMethod, setSavedPaymentMethod] = useState("");
 
   useEffect(() => {
     if (!loading && !token) {
@@ -18,7 +20,24 @@ const Account = () => {
     } else if (token) {
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
-        setUserEmail(payload.email);
+        const email = payload.email;
+        setUserEmail(email);
+
+        // Fetch saved payment method
+        fetch(`https://k3qissszlf.execute-api.us-west-2.amazonaws.com/get-profile?email=${email}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data?.paymentMethod) {
+              setSavedPaymentMethod(data.paymentMethod);
+            } else {
+              setSavedPaymentMethod("No payment method saved.");
+            }
+          })
+          .catch((err) => {
+            console.error("Error fetching profile:", err);
+            toast.error("Failed to load saved payment method.");
+          });
+
       } catch {
         setUserEmail(null);
       }
@@ -29,26 +48,34 @@ const Account = () => {
 
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
-    setMessage("Saving...");
+    if (!userEmail) {
+      toast.error("User email not found.");
+      return;
+    }
+
+    setSaving(true);
+    const paymentMethod = `${cardName} ••••${cardLast4}, Exp: ${expiry}`;
 
     try {
-      const res = await fetch("https://k3qissszlf.execute-api.us-west-2.amazonaws.com/payment-method", {
+      const res = await fetch("https://k3qissszlf.execute-api.us-west-2.amazonaws.com/save-payment", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ cardName, cardLast4, expiry }),
+        body: JSON.stringify({ email: userEmail, paymentMethod }),
       });
 
       const data = await res.json();
       if (res.ok) {
-        setMessage("✅ Payment method saved!");
+        toast.success(data.message || "Payment method saved.");
+        setSavedPaymentMethod(paymentMethod); // update UI after save
       } else {
-        setMessage(data.error || "Failed to save.");
+        toast.error(data.error || "Failed to save payment method.");
       }
     } catch (err) {
-      setMessage("Error: " + err.message);
+      toast.error("Error: " + err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -71,7 +98,7 @@ const Account = () => {
         />
         <input
           type="text"
-          placeholder="Card Number"
+          placeholder="Last 4 Digits"
           maxLength={4}
           value={cardLast4}
           onChange={(e) => setCardLast4(e.target.value)}
@@ -84,9 +111,16 @@ const Account = () => {
           onChange={(e) => setExpiry(e.target.value)}
           required
         />
-        <button type="submit">Save Payment Method</button>
+        <button type="submit" disabled={saving}>
+          {saving ? "Saving..." : "Save Payment Method"}
+        </button>
       </form>
-      {message && <p>{message}</p>}
+
+      {savedPaymentMethod && (
+        <div style={{ marginTop: "1rem", fontStyle: "italic" }}>
+          Saved: {savedPaymentMethod}
+        </div>
+      )}
     </div>
   );
 };
