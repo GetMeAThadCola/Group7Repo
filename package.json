@@ -45,5 +45,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "description": "BiteRunner is a React-based e-commerce platform designed for a medium-sized food distributor to enable direct customer ordering and flexible logistics customization.",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

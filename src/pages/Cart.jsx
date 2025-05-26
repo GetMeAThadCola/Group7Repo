@@ -3,7 +3,6 @@ import { Col, Container, Row } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addToCart,
-  decreaseQty,
   deleteProduct,
   clearCart,
 } from "../app/features/cart/cartSlice";
@@ -23,24 +22,24 @@ const Cart = () => {
     0
   );
 
+  // ✅ TEMP: Clear cart if old product IDs are present
   useEffect(() => {
-    console.log("Cart useEffect loaded. User:", user);
+    if (cartList.some(item => item.productId?.startsWith("f") || item.id?.startsWith("f"))) {
+      dispatch(clearCart());
+      toast.info("Cart reset due to outdated product IDs");
+    }
+  }, [cartList, dispatch]);
 
+  useEffect(() => {
     if (!loading && user?.email && !hasLoadedPayment) {
-      console.log("Fetching payment method for:", user.email);
-
       fetch(`https://k3qissszlf.execute-api.us-west-2.amazonaws.com/get-profile?email=${user.email}`)
         .then((res) => res.json())
         .then((data) => {
-          console.log("Fetched profile:", data);
-
           if (data && data.paymentMethod) {
             setSavedPaymentMethod(data.paymentMethod);
-            console.log("Payment method set to:", data.paymentMethod);
           } else {
             toast.info("No saved payment method found. Using fallback.");
           }
-
           setHasLoadedPayment(true);
         })
         .catch((err) => {
@@ -51,15 +50,23 @@ const Cart = () => {
     }
   }, [loading, user?.email, hasLoadedPayment]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const handleCheckout = async () => {
     const payload = {
       email: user?.email || "guest@example.com",
-      items: cartList,
+      items: cartList.map((item) => ({
+        productId: item.id,
+        productName: item.productName,
+        quantity: item.qty
+      })),
       total: totalPrice,
       paymentMethod: savedPaymentMethod,
     };
 
-    console.log("Checkout payload:", payload);
+    console.log("Checkout payload:", JSON.stringify(payload, null, 2));
 
     try {
       const response = await fetch(
@@ -79,6 +86,7 @@ const Cart = () => {
         toast.success(`Transaction successful! Charged to ${savedPaymentMethod}`);
         dispatch(clearCart());
       } else {
+        console.error("Checkout failed response:", data);
         toast.error(`Checkout failed: ${data.error || "Unknown error"}`);
       }
     } catch (error) {
@@ -86,10 +94,6 @@ const Cart = () => {
       toast.error("Failed to process checkout. Please try again.");
     }
   };
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
 
   if (loading) return <p style={{ padding: "2rem" }}>Loading cart...</p>;
 
@@ -119,20 +123,25 @@ const Cart = () => {
                           </h4>
                         </Col>
                         <Col xs={12} sm={3} className="cartControl">
-                          <button
-                            className="incCart"
-                            onClick={() =>
-                              dispatch(addToCart({ product: item, num: 1 }))
-                            }
-                          >
-                            <i className="fa-solid fa-plus"></i>
-                          </button>
-                          <button
-                            className="desCart"
-                            onClick={() => dispatch(decreaseQty(item))}
-                          >
-                            <i className="fa-solid fa-minus"></i>
-                          </button>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.qty}
+                            onChange={(e) => {
+                              const newQty = parseInt(e.target.value) || 1;
+                              const delta = newQty - item.qty;
+                              if (delta !== 0) {
+                                dispatch(addToCart({ product: item, num: delta }));
+                              }
+                            }}
+                            style={{
+                              width: "60px",
+                              textAlign: "center",
+                              padding: "4px",
+                              borderRadius: "4px",
+                              border: "1px solid #ccc",
+                            }}
+                          />
                         </Col>
                       </Row>
                     </Col>

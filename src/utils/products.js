@@ -1,4 +1,4 @@
-// image imports (replace with your actual food image files)
+
 import pizzaImg01 from "../Images/pizza-margherita.jpg";
 import pizzaImg02 from "../Images/pepperoni-pizza.jpg";
 import burgerImg01 from "../Images/classic-burger.jpg";
@@ -8,7 +8,6 @@ import riceImg02 from "../Images/paneer-biryani.jpg";
 import dessertImg01 from "../Images/chocolate-cake.jpg";
 import dessertImg02 from "../Images/ice-cream.jpg";
 
-// slider images
 import pizzaBanner from "../Images/hero-pizza.jpg";
 import burgerBanner from "../Images/hero-burger.jpg";
 import dessertBanner from "../Images/hero-dessert.jpg";
@@ -42,7 +41,7 @@ export const serviceData = [
   {
     icon: <ion-icon name="car"></ion-icon>,
     title: "Free Delivery",
-    subtitle: "On all orders over $20",
+    subtitle: "On all orders over $200",
     bg: "#fdefe6",
   },
   {
@@ -66,9 +65,9 @@ export const serviceData = [
 ];
 
 export const products = [
-  // same products array as before
+
   {
-    id: "f01",
+    id: "cheese pizza",
     productName: "Margherita Pizza",
     imgUrl: pizzaImg01,
     category: "pizza",
@@ -79,7 +78,7 @@ export const products = [
     avgRating: 4.9,
   },
   {
-    id: "f02",
+    id: "pepperoni pizza",
     productName: "Pepperoni Pizza",
     imgUrl: pizzaImg02,
     category: "pizza",
@@ -90,7 +89,7 @@ export const products = [
     avgRating: 4.8,
   },
   {
-    id: "f03",
+    id: "cheese burger",
     productName: "Classic Cheeseburger",
     imgUrl: burgerImg01,
     category: "burger",
@@ -101,7 +100,7 @@ export const products = [
     avgRating: 4.7,
   },
   {
-    id: "f04",
+    id: "veganburger",
     productName: "Vegan Burger",
     imgUrl: burgerImg02,
     category: "burger",
@@ -112,7 +111,7 @@ export const products = [
     avgRating: 4.6,
   },
   {
-    id: "f05",
+    id: "chicken biryani",
     productName: "Chicken Biryani",
     imgUrl: riceImg01,
     category: "rice",
@@ -123,7 +122,7 @@ export const products = [
     avgRating: 4.9,
   },
   {
-    id: "f06",
+    id: "panner biryani",
     productName: "Paneer Biryani",
     imgUrl: riceImg02,
     category: "rice",
@@ -134,7 +133,7 @@ export const products = [
     avgRating: 4.8,
   },
   {
-    id: "f07",
+    id: "chocolate cake",
     productName: "Chocolate Cake",
     imgUrl: dessertImg01,
     category: "dessert",
@@ -145,7 +144,7 @@ export const products = [
     avgRating: 5.0,
   },
   {
-    id: "f08",
+    id: "vanilla ice cream",
     productName: "Vanilla Ice Cream",
     imgUrl: dessertImg02,
     category: "dessert",
