@@ -21,4 +21,4 @@ BiteRunner is a React-based e-commerce platform designed for a medium-sized food
 - **Authentication**: AWS Cognito
 - **Serverless Backend**: API Gateway/Lambda Functions
 - **Infrastructure as Code**: Terraform
-- **CI/CD (optional)**: AWS CodePipeline
+- **CI/CD**: AWS CodePipeline
