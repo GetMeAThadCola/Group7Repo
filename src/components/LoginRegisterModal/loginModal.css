@@ -38,7 +38,7 @@
   .modal-box button {
     width: 100%;
     padding: 0.75rem;
-    background: #0f3460;
+    background: BLACK;
     color: white;
     font-weight: bold;
     border: none;
@@ -48,7 +48,7 @@
   }
   
   .modal-box button:hover {
-    background: #09294d;
+    background: black;
   }
   
   .modal-box p {
@@ -58,7 +58,7 @@
   }
   
   .modal-box p span {
-    color: #0f3460;
+    color: BLACK;
     cursor: pointer;
     font-weight: 600;
     text-decoration: underline;

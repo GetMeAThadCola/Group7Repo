@@ -10,36 +10,45 @@ import useWindowScrollToTop from "../hooks/useWindowScrollToTop";
 
 const Product = () => {
   const { id } = useParams();
-  const [selectedProduct, setSelectedProduct] = useState(
-    products.filter((item) => parseInt(item.id) === parseInt(id))[0]
-  );
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
+
+  // Set the selected product when ID changes
   useEffect(() => {
+    const found = products.find((item) => item.id === id);
+
+    setSelectedProduct(found);
     window.scrollTo(0, 0);
-    setSelectedProduct(
-      products.filter((item) => parseInt(item.id) === parseInt(id))[0]
-    );
-    setRelatedProducts(
-      products.filter(
+  }, [id]);
+
+  // Set related products once selectedProduct is updated
+  useEffect(() => {
+    if (selectedProduct) {
+      const related = products.filter(
         (item) =>
-          item.category === selectedProduct?.category &&
-          item.id !== selectedProduct?.id
-      )
-    );
-  }, [selectedProduct, id]);
+          item.category === selectedProduct.category &&
+          item.id !== selectedProduct.id
+      );
+      setRelatedProducts(related);
+    }
+  }, [selectedProduct]);
 
   useWindowScrollToTop();
 
   return (
     <Fragment>
-      <Banner title={selectedProduct?.productName} />
-      <ProductDetails selectedProduct={selectedProduct} />
-      <ProductReviews selectedProduct={selectedProduct} />
+      <Banner title={selectedProduct?.productName || "Product"} />
+      {selectedProduct && (
+        <>
+          <ProductDetails selectedProduct={selectedProduct} />
+          <ProductReviews selectedProduct={selectedProduct} />
+        </>
+      )}
       <section className="related-products">
         <Container>
           <h3>You might also like</h3>
+          <ShopList productItems={relatedProducts} />
         </Container>
-        <ShopList productItems={relatedProducts} />
       </section>
     </Fragment>
   );

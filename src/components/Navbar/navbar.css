@@ -1,7 +1,7 @@
 /* Navbar Section  */
 .navbar {
   position: relative !important;
-  background-color: white;
+  background-color: rgb(34, 34, 34);
   transition: all 0.3s ease-out 0s !important;
   box-shadow: 0px 10px 10px 0px rgba(9, 5, 29, 0.171) !important;
   font-size: 1.2rem !important;
@@ -96,7 +96,7 @@
 .logo {
   font-size: 25px;
   font-weight: 500;
-  color: black;
+  color: rgb(255, 255, 255);
   margin: 0;
 }
 
@@ -111,7 +111,7 @@
 }
 
 .nav-link-label {
-  color: black;
+  color: rgb(255, 255, 255);
   font-size: 18px !important;
   font-weight: 600;
 }
