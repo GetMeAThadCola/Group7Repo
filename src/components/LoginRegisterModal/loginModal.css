@@ -71,19 +71,20 @@
     text-align: center;
   }
   
-  .close-btn {
-    position: absolute;
-    top: 0.75rem;
-    right: 1rem;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #999;
-    transition: color 0.2s ease;
-  }
-  
-  .close-btn:hover {
-    color: #333;
-  }
-  
+
+.close-btn {
+  position: absolute;
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #333;
+}
