@@ -2,6 +2,8 @@
 
 BiteRunner is a React-based e-commerce platform designed for a medium-sized food distributor to enable direct customer ordering and flexible logistics customization.
 
+This is the front-end code of the project. Coded in React and Updated by Group 7
+
 ---
 
 ## 🚀 Features
